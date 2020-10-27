@@ -1,0 +1,16 @@
+Package: InferenceSuperspreading
+Type: Package
+Title: Inference under Superspreading
+Version: 0.1.0
+Author: Patrick Schmidt
+Maintainer: Patrick Schmidt <pschmidte@gmail.com>
+Description: Contains replication code for "Inference under superspreading: How policy interventions, weather, testing, and public information shaped SARS-CoV-2 transmission in Germany".
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
+Imports: 
+    dplyr,
+    lubridate,
+    ggplot2,
+    tidyr
