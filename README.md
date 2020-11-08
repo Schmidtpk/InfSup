@@ -7,9 +7,9 @@
 
 <!-- badges: end -->
 
-This repository provides replication code for the paper [Inference under
-Superspreading](https://sites.google.com/view/patrickschmidt/home) by
-Patrick Schmidt.
+This repository provides replication code for the paper “Inference under
+Superspreading” by [Patrick
+Schmidt](https://sites.google.com/view/patrickschmidt/home).
 
 ## Installation
 
@@ -35,7 +35,7 @@ on state and county level. The case data contains date of symptom onset,
 date of reporting, death, and age brackets.
 
 Preparation of data and execution of MCMC sampling can be found in the
-folder `jags models/submission/run draft.R`. The JAGS model can be found
+folder `jags models/submission/run model.R`. The JAGS model can be found
 in the same folder and is named `jags base error.R`.
 
 The replication code of all figures, tables, and quantitative statements

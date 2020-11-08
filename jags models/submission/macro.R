@@ -17,9 +17,8 @@ if(!exists("fast")){
 options(tidyverse.quiet = TRUE)
 
 
-suppressMessages(
   ### load required packages
-  c(library(dplyr),
+c(library(dplyr),
     library(lubridate),
     library(tidyr),
     library(rjags),
@@ -28,7 +27,7 @@ suppressMessages(
     library(lubridate),
     library(R2jags),
     library(MCMCvis),
-    library(dclone)))
+    library(dclone))
 message("Packages loaded.")
 
 # +++ TEST +++ --------------------------------------------------------------------

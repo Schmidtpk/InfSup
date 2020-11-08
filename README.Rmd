@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-This repository provides replication code for the paper [Inference under Superspreading](https://sites.google.com/view/patrickschmidt/home) by [Patrick Schmidt](https://sites.google.com/view/patrickschmidt/home).
+This repository provides replication code for the paper "Inference under Superspreading" by [Patrick Schmidt](https://sites.google.com/view/patrickschmidt/home).
 
 ## Installation
 
