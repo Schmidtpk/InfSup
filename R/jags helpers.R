@@ -53,7 +53,7 @@ extract_effects <- function(cov.choice = macro$cov,
   res <- rbind(res.cov,res.dummies)
 
   #filter according to covariate choice
-  res <- res %>% filter(m %in% cov.choice)
+  res <- res %>% dplyr::filter(m %in% cov.choice)
 
   return(res)
 }
@@ -166,7 +166,7 @@ extract_mcmc <- function(name,
   if(t_only_model & ("t" %in% colnames(dat.cur))){
     Ti <- data.frame(Ti = dat$Ti, name= names(dat$Ti))
     dat.cur <- left_join(dat.cur,Ti)
-    dat.cur <- dat.cur %>% filter(t >= Ti)
+    dat.cur <- dat.cur %>% dplyr::filter(t >= Ti)
     message(paste0(c("Drop observations before dat$Ti, which is ", dat$Ti),collapse = " "))
   }
 
@@ -179,21 +179,21 @@ extract_mcmc <- function(name,
   if(!is.null(sample_name) & ("name" %in% colnames(dat.cur)))
   {
     if(is.numeric(sample_name))
-      dat.cur <- dat.cur %>% filter(name %in% sample(unique(dat.cur$name), sample_name))
+      dat.cur <- dat.cur %>% dplyr::filter(name %in% sample(unique(dat.cur$name), sample_name))
     else if(is.logical(sample_name))
-      dat.cur <- dat.cur %>% filter(name %in% sample(unique(dat.cur$name), min(16,length(unique(dat.cur$name)))))
+      dat.cur <- dat.cur %>% dplyr::filter(name %in% sample(unique(dat.cur$name), min(16,length(unique(dat.cur$name)))))
     else if(is.character(sample_name)|is.vector(sample_name))
-      dat.cur <- dat.cur %>% filter(grepl(paste(sample_name,collapse = "|"),name))
+      dat.cur <- dat.cur %>% dplyr::filter(grepl(paste(sample_name,collapse = "|"),name))
   }
 
   if(!is.null(sample_age) & ("age" %in% colnames(dat.cur)))
   {
     if(is.numeric(sample_age))
-      dat.cur <- dat.cur %>% filter(age %in% sample(unique(dat.cur$age), sample_age))
+      dat.cur <- dat.cur %>% dplyr::filter(age %in% sample(unique(dat.cur$age), sample_age))
     else if(is.logical(sample_age))
-      dat.cur <- dat.cur %>% filter(age %in% sample(unique(dat.cur$age), min(16,length(unique(dat.cur$age)))))
+      dat.cur <- dat.cur %>% dplyr::filter(age %in% sample(unique(dat.cur$age), min(16,length(unique(dat.cur$age)))))
     else if(is.character(sample_age)|is.vector(sample_age))
-      dat.cur <- dat.cur %>% filter(grepl(paste(sample_age,collapse = "|"),age))
+      dat.cur <- dat.cur %>% dplyr::filter(grepl(paste(sample_age,collapse = "|"),age))
   }
 
   # add variable name as comment
@@ -242,25 +242,29 @@ show_total_effect <- function(covariates = macro$cov.weather,
                               average_age = FALSE,
                               smooth = FALSE,
                               show_covariate = FALSE,
+                              absoluteR = FALSE,
                               ...)
 {
   dim_names <- c("age","m")
 
   R <- extract_effects(covariates)
 
-  # R <- extract_mcmc("beta_effect\\[",
-  #                     dim_names = dim_names,
-  #                     samples = TRUE,...) %>%
-  #     rename(draw = 'beta_effect\\[')
-
-
   if(!is.null(draws_max)) # drop some draws from mcmc for speed
-    R <- R %>% filter(iteration %in% sample(unique(iteration),draws_max))
+    R <- R %>% dplyr::filter(iteration %in% sample(unique(iteration),draws_max))
 
   if(choose_age){# filter chosen age groups
     if(is.numeric(choose_age))
       choose_age <- dimnames(dat$reports)[[3]][choose_age]
-    R <- R %>% filter(age %in% choose_age)
+    R <- R %>% dplyr::filter(age %in% choose_age)
+  }
+
+  if(average_age){
+    R <- R %>% left_join(Covid::regionaldatenbank%>%
+                           dplyr::filter(adm.level==1)%>%
+                           select(age,total))%>%
+      group_by(iteration,m)%>%
+      summarise(draw = weighted.mean(draw,w = total)) %>%
+      mutate(age="average")
   }
 
   # load x
@@ -268,14 +272,19 @@ show_total_effect <- function(covariates = macro$cov.weather,
     x <- as_tibble(as.data.frame.table(dat$x))
     names(x)<- c("t","c","m","x")
 
+    xd <- as_tibble(as.data.frame.table(dat$xd))
+    names(xd)<- c("t","c","m","x")
+
+    x <- rbind(x,xd)
+
     x <- x %>%
       mutate(t=as.numeric(t)) %>%
-      filter(t >= min(dat$Ti))
+      dplyr::filter(t >= min(dat$Ti))
 
     message(paste("Not in model:", setdiff(covariates,unique(x$m))))
-    x <- x %>% filter(m %in% covariates)
+    x <- x %>% dplyr::filter(m %in% covariates)
 
-    x <- x %>% filter(!is.na(x))
+    x <- x %>% dplyr::filter(!is.na(x))
 
     x <- x %>% left_join(data%>%select(t,date)%>%unique()) %>% select(-c(t))
 
@@ -317,19 +326,19 @@ show_total_effect <- function(covariates = macro$cov.weather,
 
 
   if(!is.null(choose_c)){# filter chosen countries
-    x2 <- x %>% filter(c %in% choose_c)
+    x2 <- x %>% dplyr::filter(c %in% choose_c)
     if(nrow(x2)==0){
       warning("choose_c drops all observations. Take random instead.")
-      x2 <- x %>% filter(c %in% sample(c,1))
+      x2 <- x %>% dplyr::filter(c %in% sample(c,1))
     }
     x <- x2
   }
 
   if(average_c){
-      x <- x %>% group_by(date,m) %>%
-        summarise(
-          x = mean(x,na.rm = TRUE)
-        ) %>% mutate(c="average")
+    x <- x %>% group_by(date,m) %>%
+      summarise(
+        x = mean(x,na.rm = TRUE)
+      ) %>% mutate(c="average")
   }
 
   # join x and posterior draws
@@ -344,6 +353,10 @@ show_total_effect <- function(covariates = macro$cov.weather,
     summarise(
       value = (prod(effect)-1)*100
     )
+
+
+  if(absoluteR)
+    effects$value <- 2.88*(1+effects$value/100)
 
   if(!CI_large){
     effects <- effects %>%
@@ -363,14 +376,6 @@ show_total_effect <- function(covariates = macro$cov.weather,
       )
   }
 
-  if(average_age){
-    effects <- effects %>% group_by(date,c) %>%
-      summarise(
-        down = mean(down),
-        X50. = mean(X50.),
-        up = mean(up),
-      ) %>% mutate(age="average")
-  }
 
   if(smooth){
     effects <- effects %>%
@@ -440,18 +445,18 @@ show_total_effect <- function(covariates = macro$cov.weather,
 #' @return
 #' @export
 show_effects_sample <- function(
-                         cov.choice = macro$cov,
-                         times = FALSE,
-                         filter_age = NULL,
-                         average.age = FALSE,
-                         hlines = TRUE,
-                         CI_large = TRUE,
-                         add_prior = FALSE,
-                         background_prior = TRUE,
-                         scale = "free_y",
-                         order = FALSE,
-                         width_errorbar = 1,
-                         ...)
+  cov.choice = macro$cov,
+  times = FALSE,
+  filter_age = NULL,
+  average.age = FALSE,
+  hlines = TRUE,
+  CI_large = TRUE,
+  add_prior = FALSE,
+  background_prior = TRUE,
+  scale = "free_y",
+  order = FALSE,
+  width_errorbar = 1,
+  ...)
 {
   if(is.null(cov.choice)|length(cov.choice)==0){
     message("No variables selected")
@@ -477,13 +482,13 @@ show_effects_sample <- function(
     if(is.numeric(filter_age))
       filter_age <- unique(res$age)[filter_age]
 
-    res <- res %>% filter(age %in% filter_age)
+    res <- res %>% dplyr::filter(age %in% filter_age)
   }
 
   if(average.age){#weighted mean
     res <- res %>%
       left_join(Covid::regionaldatenbank%>%
-                  filter(adm.level==1)%>%
+                  dplyr::filter(adm.level==1)%>%
                   select(age,total)) %>%
       group_by(m,iteration)%>%
       summarise(
@@ -502,10 +507,10 @@ show_effects_sample <- function(
     qlevels <- c(.25,.75)
 
   res <- res %>% group_by(m,age)%>%
-  summarise(
-    middle = median(draw),
-    down = quantile(draw, qlevels[1]),
-    up = quantile(draw, qlevels[2]))
+    summarise(
+      middle = median(draw),
+      down = quantile(draw, qlevels[1]),
+      up = quantile(draw, qlevels[2]))
 
 
 
@@ -560,7 +565,8 @@ show_effects_sample <- function(
                    grepl("Wind",res$m)|
                    grepl("Regen",res$m)|
                    grepl("Sonne",res$m)|
-                   grepl("info",res$m)]<- "weather, info"
+                   grepl("incidence",res$m)|
+                   grepl("info",res$m)]<- "weather & incidence"
 
 
     res$category[grepl("testing",res$m)|
@@ -637,8 +643,8 @@ show_effects_sample <- function(
   if(background_prior){
     if(!order)
       dat.cur <- res %>% select(age,category,m,prior.up,prior.down)%>%
-      group_by(category)%>%
-      slice(1)
+        group_by(category)%>%
+        slice(1)
     else
       dat.cur <- res %>% select(age,m,prior.up,prior.down)%>%
         slice(1)

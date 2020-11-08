@@ -16,6 +16,7 @@ show_total_effect(
   average_age = FALSE,
   smooth = FALSE,
   show_covariate = FALSE,
+  absoluteR = FALSE,
   ...
 )
 }

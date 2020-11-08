@@ -22,7 +22,8 @@ labels.draft <- c(
   gatherings = "gatherings lim.",
   'churches open' = "churches reopen",
   'schools open' = 'schools reopen',
-  'kitas open' = 'daycare reopen'
+  'kitas open' = 'daycare reopen',
+  'curfew' = 'Stay-at-home order'
 )
 
 
@@ -46,16 +47,16 @@ labels.draft2 <- c(
   'schools openlimited' = "schools reopen",
   shops2 = "shops changed",
   UPM.Relative_Feuchte = "relative humidity (r,s)",
-  speechlimited = "first speech",
   education = "schools or daycare closed",
   traced = "ratio of traced infectious (r)",
   restaurants = "restaurants closed",
   masks = "masks in public",
-  speech = "public awareness rising",
+  speechlimited = "public awareness rising",
   shops = "non-essential shops closed",
   distance = "distancing in public",
   'churches open' = "churches reopen",
-  sports = 'sports limited'
+  sports = 'sports limited',
+  curfew = "stay-at-home order"
 )
 
 
@@ -64,7 +65,6 @@ my_labeller2 <- function(value){
   label.cur <- as.character(labels.draft2[value])
   return(if_else(is.na(label.cur),value,label.cur))
 }
-
 #' @export
 age_labels <- function(value)
   gsub("A","",value)
@@ -166,7 +166,7 @@ ifr_estimate <- function(age=45, weights = FALSE){
        return(mean(exp(-7.56 + 0.121 * age)))
     } else { #return value for weighted mean
         weights <- Covid::pop %>%
-          filter(name=="Deutschland") %>%
+          dplyr::filter(name=="Deutschland") %>%
           select(age,total)%>%
           inner_join(data.frame(age=as.numeric(age)))
         return(weighted.mean(exp(-7.56 + 0.121 * weights$age),weights$total))
@@ -201,6 +201,23 @@ total_diff_effect <- function(df.values, choose_age = NULL, average = FALSE,cov.
 
   draws <- extract_effects(unique(df.values$m))
 
+
+  if(!is.null(choose_age)){
+    if(is.numeric(choose_age))
+      choose_age <- dimnames(dat$reports)[[3]][choose_age]
+    draws <- draws %>% dplyr::filter(age %in% choose_age)
+  }
+
+
+  if(average){
+    draws <- draws %>% left_join(Covid::regionaldatenbank%>%
+                                   dplyr::filter(adm.level==1)%>%
+                                   select(age,total))%>%
+      group_by(iteration,m)%>%
+      summarise(draw = weighted.mean(draw,w = total))%>%
+      mutate(age="average")
+  }
+
   effect <- draws %>%
     left_join(macro$df.standardize,by=c("m"="cov"))%>%
     left_join(df.values) %>%
@@ -208,34 +225,16 @@ total_diff_effect <- function(df.values, choose_age = NULL, average = FALSE,cov.
            sd = ifelse(is.na(sd),1,sd),
            value1 = (value1 - mean) / sd,
            value2 = (value2 - mean) / sd,
-           effect = draw*(value1-value2))
+           effect = draw*(value1-value2),
+           effect = pmin(pmax(effect,-1),1))
 
-  if(!is.null(choose_age)){
-    if(is.numeric(choose_age))
-      choose_age <- dimnames(dat$reports)[[3]][choose_age]
-    effect <- effect %>% filter(age %in% choose_age)
-  }
-
-
-  if(!average){
-    # by age
-    effect %>%
-      group_by(age)%>%
-      summarise(mean(effect),
-                t(quantile(effect,probs=c(.025,.1,.9,.975))))
-  } else {
-    # weighted average
-    effect %>% left_join(data %>%
-                           select(Bundesland,age,pop) %>% unique() %>%
-                           group_by(age) %>% summarise(pop = sum(pop)))%>%
-      group_by(iteration,m)%>%
-      summarise(effect = weighted.mean(effect,w = pop))%>%
-      ungroup()%>%
-      summarise(
-        mean(effect),
-        t(quantile(effect,probs=c(.025,.1,.9,.975)))
-        )
-  }
+  effect %>%
+    group_by(age,iteration)%>%
+    summarise(remaining = prod(1+effect),
+              effect = remaining-1)%>%
+    group_by(age)%>%
+    summarise(mean(effect),
+              t(quantile(effect,probs=c(.025,.1,.9,.975))))
 }
 
 
