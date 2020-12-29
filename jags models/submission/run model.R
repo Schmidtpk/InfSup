@@ -14,9 +14,9 @@ if(grepl("quamet",getwd())){
 
 ### source macro file
 if(server){
-  source("/home/quamet/patrick/submission/macro.R")
+  source("/home/quamet/patrick/submission/macro submission.R")
 } else {
-  source("./jags models/submission/macro.R",local = TRUE)
+  source("./jags models/submission/macro submission.R",local = TRUE)
 }
 
 # Marco settings ---------------------------------------------------
