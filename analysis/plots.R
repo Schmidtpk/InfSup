@@ -7,7 +7,7 @@ start.date <- as.Date("2020-02-15")
 end.date1 <- as.Date("2020-05-15")
 end.date2 <- as.Date("2020-09-01")
 
-res.path <- "./jags models/submission/save/draft_heinsbergXX11-06.RData"
+res.path <- "./jags models/submission/save/submission.RData"
 
 
 # number of symptomatic cases
