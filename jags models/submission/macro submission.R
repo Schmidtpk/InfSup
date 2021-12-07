@@ -105,7 +105,7 @@ if (fast){
   # include week FE
   macro$time_FE<- FALSE
 
-  macro$dummies.interventions <- setdiff(colnames(Covid::interventions),
+  macro$dummies.interventions <- setdiff(colnames(CovidGer::interventions),
                                          c("date","unit","Bundesland","all_interventions_exist"))
 
   macro$dummies.interventions <- macro$dummies.interventions[!grepl("full testing",macro$dummies.interventions)]
