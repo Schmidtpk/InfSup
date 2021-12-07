@@ -243,6 +243,7 @@ show_total_effect <- function(covariates = macro$cov.weather,
                               smooth = FALSE,
                               show_covariate = FALSE,
                               absoluteR = FALSE,
+                              return.df = FALSE,
                               ...)
 {
   dim_names <- c("age","m")
@@ -347,6 +348,9 @@ show_total_effect <- function(covariates = macro$cov.weather,
   x$effect <- 1+x$x * x$draw
 
 
+  if(return.df)
+    return(x)
+
   # compute
   effects <- x %>%
     group_by(date,c,age,iteration) %>%
@@ -389,6 +393,7 @@ show_total_effect <- function(covariates = macro$cov.weather,
   # change age labels
   x$age <- age_labels(x$age)
   effects$age <- age_labels(effects$age)
+
 
 
   p <- ggplot(effects,aes(x=date))

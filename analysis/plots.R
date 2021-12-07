@@ -119,7 +119,7 @@ df.eff <- extract_effects(cov.main)
 my_rounding <- function(x) round(x,digits = 2)
 
 # average
-df.eff %>%
+df.eff1 <- df.eff %>%
   group_by(m) %>%
   left_join(Covid::regionaldatenbank%>%
               filter(adm.level==1)%>%
@@ -134,19 +134,24 @@ df.eff %>%
     mean = my_rounding(mean(draw)),
     up = my_rounding(quantile(draw,0.975)),
     down = my_rounding(quantile(draw, 0.025)),
+    lengthCI = up-down,
     out = paste0(mean, "[",down,",",up,"]")
-  )%>%select(m,
-             #age,
-             out)%>%
+  )
+
+
+df.eff1 %>% pull(lengthCI)%>%summary()
+
+df.eff1 %>%select(m,
+                  #age,
+                  out)%>%
   arrange(m
           #,age
-          )%>%
+  )%>%
   mutate(#age=age_labels(age),
-         m=my_labeller2(as.character(m)))%>%
+    m=my_labeller2(as.character(m)))%>%
   #pivot_wider(names_from = age,values_from=out)%>%
   rename(covariate=m)#%>%
-  #xtable::xtable()%>%print(include.rownames=FALSE)
-
+#xtable::xtable()%>%print(include.rownames=FALSE)
 # by age
 df.eff %>%
   group_by(age,
@@ -805,6 +810,32 @@ p+
                  dat.interventions%>%filter(date==x)%>%pull(cov)%>%paste0(collapse = ",")}))+
   theme(axis.text.x = element_text(angle=90))
 
+
+
+
+#  convergence -----------------------------------------------------------
+
+
+mcmcplots::traplot(samps,resMCMC%>%
+  arrange(-Rhat)%>%
+  filter(1:n() < 21)%>%
+  rownames(), style="plain")
+
+ggplot(resMCMC,
+       aes(x=Rhat))+geom_histogram(bins = 100)
+
+
+
+# positive constraints ----------------------------------------------------
+
+df.cur <- show_total_effect(
+  choose_age = total.age,average_c = TRUE,
+  covariates = c(macro$cov,macro$dummies.interventions),
+  return.df =TRUE
+)
+
+summary(df.cur$effect)
+sum(df.cur$effect< 0)
 
 # +++ DATA +++ --------------------------------------------------------------------
 
