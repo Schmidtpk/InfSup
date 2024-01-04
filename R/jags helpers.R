@@ -543,7 +543,8 @@ show_effects_sample <- function(
 
   if(background_prior){
     prior<-list()
-    sample.prior <- rnorm(1e5,0,dat$effect_sd)
+    sd.cur <- ifelse(average.age, sqrt(1/dat$na)*dat$effect_sd ,dat$effect_sd)
+    sample.prior <- rnorm(1e6,0,sd.cur)
     sample.prior <- sample.prior[sample.prior>-1]
     if(CI_large){
       res$prior.down <- quantile(sample.prior,probs = 0.025)
@@ -601,21 +602,21 @@ show_effects_sample <- function(
     res$category[res$m %in% macro$dummies.factors]<- "factors"
 
 
-    res$m <- gsub("eventslimited","events lim.",res$m)
-    res$m <- gsub("limited","",res$m)
+    # res$m <- gsub("eventslimited","events lim.",res$m)
+    # res$m <- gsub("limited","",res$m)
     #res$m <- gsub(" open","?",res$m)
 
-    res$m <- gsub("events recommendedlimited","events rec.",res$m)
-
-    res$m <- gsub("speechMerkel","speech (2nd)",res$m)
-    res$m <- gsub("cumsum_incidence100","cum. incidence",res$m)
-    res$m <- gsub("info_incidence"," incidence",res$m)
-    res$m <- gsub("info_lincidence"," log incidence",res$m)
-    res$m <- gsub("UPM.Relative_Feuchte","rel. humidity",res$m)
-    res$m <- gsub("VPM.Dampfdruck","abs. humidity",res$m)
-    res$m <- gsub("SDK.Sonnenscheindauer","sun hours",res$m)
-    res$m <- gsub("TMK.Lufttemperatur","temperature",res$m)
-    res$m <- gsub("recommended","rec.",res$m)
+    # res$m <- gsub("events recommendedlimited","events rec.",res$m)
+    #
+    # res$m <- gsub("speechMerkel","speech (2nd)",res$m)
+    # res$m <- gsub("cumsum_incidence100","cum. incidence",res$m)
+    # res$m <- gsub("info_incidence"," incidence",res$m)
+    # res$m <- gsub("info_lincidence"," log incidence",res$m)
+    # res$m <- gsub("UPM.Relative_Feuchte","rel. humidity",res$m)
+    # res$m <- gsub("VPM.Dampfdruck","abs. humidity",res$m)
+    # res$m <- gsub("SDK.Sonnenscheindauer","sun hours",res$m)
+    # res$m <- gsub("TMK.Lufttemperatur","temperature",res$m)
+    # res$m <- gsub("recommended","rec.",res$m)
 
     # assign week day fixed effects if present
     if(all(unique(res$m)%in%macro$dummies.FE)){
@@ -638,7 +639,7 @@ show_effects_sample <- function(
       geom_errorbar(aes(ymin=down,ymax=up),alpha=.8,position =  pd,width=width_errorbar)+
       geom_point(aes(y=middle),position = pd)+coord_flip()+
       scale_x_discrete(limits = res$m[order(res$orderby)],
-                       label = my_labeller2)
+                       label = my_labeller3)
   }
 
   if(hlines)

@@ -4,7 +4,6 @@
 # Inference under Superspreading
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
 This repository provides replication code for the paper “Inference under
@@ -52,6 +51,14 @@ The main plot in paper is generated with the function
 
 ``` r
 library(InfSup)
+library(tidyverse)
+#> Warning: package 'tidyverse' was built under R version 4.1.3
+#> Warning: package 'tibble' was built under R version 4.1.3
+#> Warning: package 'tidyr' was built under R version 4.1.3
+#> Warning: package 'readr' was built under R version 4.1.3
+#> Warning: package 'dplyr' was built under R version 4.1.3
+#> Warning: package 'stringr' was built under R version 4.1.3
+#> Warning: package 'forcats' was built under R version 4.1.3
 
 #load data and macro information about model
 load("./jags models/submission/save/submission.RData")
@@ -77,7 +84,7 @@ cov.main<-c("UPM.Relative_Feuchte",
 show_effects_sample(cov.choice = cov.main,
                     average.age = TRUE,
                     order = TRUE)
-#> Warning: position_dodge requires non-overlapping x intervals
+#> Warning: `position_dodge()` requires non-overlapping x intervals
 ```
 
 <img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
@@ -91,11 +98,11 @@ show_effects_sample(cov.choice = cov.main)
 
 <img src="man/figures/README-unnamed-chunk-3-1.png" width="100%" />
 
-For continous variables, it is interessting to see how the total effect
+For continuous variables, it is interesting to see how the total effect
 of a covariate changed over time. The function `show_total_effect` takes
 the model inputs and computes and plots their effect over time based on
-the estimates in the model. It averages over all locations if average\_c
-is TRUE and over all age groups if average\_age is TRUE.
+the estimates in the model. It averages over all locations if average_c
+is TRUE and over all age groups if average_age is TRUE.
 
 ``` r
 show_total_effect(average_c = TRUE,

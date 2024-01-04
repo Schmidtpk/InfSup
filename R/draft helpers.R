@@ -1,12 +1,12 @@
 
 labels.draft <- c(
-  info_lincidence = "log info inc.",
+  info_lincidence = "incidence (log)",
   info_incidence = "info inc.",
   eventslimited = "events lim.",
   events = "events cl.",
   `events recommendedlimited` = "events rec.",
-  speechlimited = "speech",
-  speechMerkel = "speech (2nd)",
+  speechlimited = "public awareness rising",
+  speechMerkel = "speech chancellor",
   gatheringslimited = "gatherings lim.",
   cumsum_incidence100 = "cum. incidence",
   TMK.Lufttemperatur = "temperature",
@@ -19,13 +19,14 @@ labels.draft <- c(
   bars = "bars cl.",
   shops = "shops cl.",
   education = "schools or daycare cl.",
-  gatherings = "gatherings lim.",
   'churches open' = "churches reopen",
   'schools open' = 'schools reopen',
   'kitas open' = 'daycare reopen',
-  'curfew' = 'Stay-at-home order'
-)
-
+  'curfew' = 'stay-at-home order',
+  distance = "public distancing",
+  masks = "masks in public",
+  traced = "ratio of traced"
+  )
 
 #' @export
 my_labeller <- function(value){
@@ -38,9 +39,10 @@ my_labeller <- function(value){
 labels.draft2 <- c(
   info_lincidence = "incidence (logarithm) (r,s)",
   info_incidence = "incidence (r,s)",
-  eventslimited = "cancellation events recommended",
-  speechMerkel = "second speech",
-  gatheringslimited = "gatherings forbidden",
+  eventslimited = "events limited",
+  events = "events closed",
+  speechMerkel = "speech chancellor",
+  gatheringslimited = "gatherings limited",
   cumsum_incidence100 = "cumulative incidence (%) (r)",
   TMK.Lufttemperatur = "average temperature (r,s)",
   'kitas openlimited' = "daycares reopen",
@@ -52,13 +54,24 @@ labels.draft2 <- c(
   restaurants = "restaurants closed",
   masks = "masks in public",
   speechlimited = "public awareness rising",
-  shops = "non-essential shops closed",
-  distance = "distancing in public",
+  shops = "shops closed",
+  distance = "public distancing",
   'churches open' = "churches reopen",
   sports = 'sports limited',
-  curfew = "stay-at-home order"
+  curfew = "stay-at-home order",
+  bars = "bars closed"
 )
 
+labels.draft.all <- c(
+  labels.draft2,
+  labels.draft[!names(labels.draft) %in% names(labels.draft2)]
+)
+
+#' @export
+my_labeller3 <- function(value){
+  label.cur <- as.character(labels.draft.all[value])
+  return(if_else(is.na(label.cur),value,label.cur))
+}
 
 #' @export
 my_labeller2 <- function(value){
@@ -137,7 +150,46 @@ get_upper_tri <- function(cormat){
   return(cormat)
 }
 
+#' @export
+illustrate_matrix <- function(data){
 
+  # use first 3 columns
+  value <- data[[1]]
+  Var1 <- data[[2]]
+  Var2 <- data[[3]]
+  data$value <- value
+  data$Var1 <- Var1
+  data$Var2 <- Var2
+
+  # drop leading zero
+  data$value_string <- as.character(data$value)
+  # Create a ggheatmap
+  ggheatmap <- ggplot(data, aes(Var2, Var1, fill = value))+
+    geom_tile(color = "white")+
+    scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                         #midpoint = 0, limit = c(-1,1),
+                         space = "Lab",
+                         name="Pearson\nCorrelation") +
+    theme_minimal()+ # minimal theme
+    theme(axis.text.x = element_text(angle = 45, vjust = 1,
+                                     hjust = 1))+
+    coord_fixed()
+
+  ggheatmap +
+    geom_text(aes(Var2, Var1, label = value_string), color = "black", size = 2) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.border = element_blank(),
+      panel.background = element_blank(),
+      axis.ticks = element_blank(),
+      legend.justification = c(1, 0),
+      legend.position = c(0.6, 0.7),
+      legend.direction = "horizontal")+
+    guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                                 title.position = "top", title.hjust = 0.5))
+}
 
 
 #' @export

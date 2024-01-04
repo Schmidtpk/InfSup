@@ -46,6 +46,7 @@ The main plot in paper is generated with the function `show_effects_sample`, whi
 
 ```{r,message=FALSE}
 library(InfSup)
+library(tidyverse)
 
 #load data and macro information about model
 load("./jags models/submission/save/submission.RData")
@@ -81,7 +82,7 @@ Alternatively, the results can be shown for all age groups separatedly:
 show_effects_sample(cov.choice = cov.main)
 ```
 
-For continous variables, it is interessting to see how the total effect of a covariate changed over time. The function `show_total_effect` takes the model inputs and computes and plots their effect over time based on the estimates in the model. It averages over all locations if average_c is TRUE and over all age groups if average_age is TRUE.
+For continuous variables, it is interesting to see how the total effect of a covariate changed over time. The function `show_total_effect` takes the model inputs and computes and plots their effect over time based on the estimates in the model. It averages over all locations if average_c is TRUE and over all age groups if average_age is TRUE.
 
 ```{r, message=FALSE}
 show_total_effect(average_c = TRUE,

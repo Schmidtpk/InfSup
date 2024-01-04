@@ -17,6 +17,7 @@ show_total_effect(
   smooth = FALSE,
   show_covariate = FALSE,
   absoluteR = FALSE,
+  return.df = FALSE,
   ...
 )
 }

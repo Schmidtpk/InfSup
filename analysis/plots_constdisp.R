@@ -7,26 +7,8 @@ start.date <- as.Date("2020-02-15")
 end.date1 <- as.Date("2020-05-15")
 end.date2 <- as.Date("2020-09-01")
 
-res.path <- "./jags models/submission/save/submission.RData"
+res.path <- "./jags models/submission/save/submission_constdisp04-18.RData"
 
-
-# number of symptomatic cases
-rki_new%>%
-  filter(Meldedatum<=end.date1)%>%
-  summarise(sum(AnzahlFall[Neuer.Fall%in% c(0,1)]))
-
-rki_new%>%
-  filter(!is.na(Refdatum),
-         Meldedatum<=end.date1)%>%
-  summarise(sum(AnzahlFall[Neuer.Fall%in% c(0,1)]))
-
-df.cur <- rki_new%>%
-  filter(!is.na(Refdatum),
-         Refdatum<=end.date1)%>%
-  group_by(age)%>%
-  summarise(sum(AnzahlFall[Neuer.Fall%in% c(0,1)]))
-
-sum(df.cur[1:2,2])/sum(df.cur[,2])
 
 # +++ RESULTS BASE +++ -----------------------------------------------------------------
 
@@ -53,19 +35,6 @@ cov.main <- setdiff(c(macro$cov,setdiff(macro$dummies,macro$dummies.FE)),
 macro$notes
 show_basics()
 
-# number of symptomatic cases
-data%>%
-  summarise(sum(pos.new),
-            sum(dead.new))
-
-# number of counties in data
-data$name%>%unique%>%length()
-
-# number of counties in states with intervetions
-rki_new%>%filter(Bundesland %in% unique(interventions %>%
-                                           filter(all_interventions_exist)%>%
-                                           pull(Bundesland)))%>%pull(Landkreis)%>%unique
-
 # all effects -------------------------------------------------------------
 show_effects_sample(
   cov = c(macro$cov,
@@ -76,8 +45,10 @@ show_effects_sample(
   scale_shape_manual(values=shape.cur)+
   scale_x_discrete(label = my_labeller)+
   scale_y_continuous(labels = function(x) paste0(x,"%"))
-  ggsave("./analysis/tex/plotsnew/res_all.pdf",
-       width = 6,height=8)
+  #ggsave("./analysis/tex/plotsnew/res_all.pdf",
+       # width = 6,height=8)
+
+
 
 show_effects_sample(cov = cov.main,
                     filter_age = age.cur,
@@ -92,8 +63,8 @@ show_effects_sample(cov = cov.main,
   ggtitle("Intervention/covariate")+
   theme(plot.title = element_text(size = 9,hjust=-1.6,face="bold"))
 
-ggsave("./analysis/tex/plotsnew/res.pdf",
-       width = 4,height=4)
+#ggsave("./analysis/tex/plotsnew/res.pdf",
+       # width = 4,height=4)
 
 show_effects_sample(c(macro$dummies.FE),
                     filter_age = age.cur,
@@ -107,8 +78,8 @@ show_effects_sample(c(macro$dummies.FE),
     strip.background = element_blank(),
     strip.text.x = element_blank()
   )
-ggsave("./analysis/tex/plotsnew/res_wday.pdf",
-       width = 4,height=5)
+#ggsave("./analysis/tex/plotsnew/res_wday.pdf",
+       # width = 4,height=5)
 
 
 # effects table -----------------------------------------------------------
@@ -142,16 +113,17 @@ df.eff1 <- df.eff %>%
 df.eff1 %>% pull(lengthCI)%>%summary()
 
 df.eff1 %>%select(m,
-                  #age,
-                  out)%>%
+             #age,
+             out)%>%
   arrange(m
           #,age
-  )%>%
+          )%>%
   mutate(#age=age_labels(age),
-    m=my_labeller2(as.character(m)))%>%
+         m=my_labeller2(as.character(m)))%>%
   #pivot_wider(names_from = age,values_from=out)%>%
   rename(covariate=m)#%>%
-#xtable::xtable()%>%print(include.rownames=FALSE)
+  #xtable::xtable()%>%print(include.rownames=FALSE)
+
 # by age
 df.eff %>%
   group_by(age,
@@ -176,8 +148,6 @@ df.eff %>%
 
 
 # total weather predictions -----------------------------------------------------------------
-
-# forecast = TRUE (whole year)
 p.weather <- show_total_effect(
                   choose_age = total.age,
                   average_age = TRUE,
@@ -196,23 +166,6 @@ p.weather <- show_total_effect(
     strip.text.y = element_blank(),
     axis.title.x=element_blank())
 p.weather
-
-# forecast = FALSE (only data period)
-p.weather2 <- show_total_effect(
-  choose_age = total.age,
-  average_age = TRUE,
-  average_c = TRUE,
-  forecast = FALSE,
-  smooth = 7)+
-  scale_x_date(date_labels = "%b")+
-  theme(axis.title.x=element_blank())+
-  scale_y_continuous(name="seasonal effect",
-                     labels = function(x) paste0(x,"%"))+
-  theme(
-    strip.background = element_blank(),
-    strip.text.y = element_blank(),
-    axis.title.x=element_blank())
-p.weather2
 
 
 # total traced -----------------------------------------------------------------
@@ -243,8 +196,8 @@ show_total_effect(choose_c = "LK Tirschenreuth",
     strip.background = element_blank(),
     strip.text.y = element_blank(),
     axis.title.x=element_blank())
-ggsave("./analysis/tex/plotsnew/cumsum_Tirschenreuth.pdf",
-       width = 5,height=5)
+#ggsave("./analysis/tex/plotsnew/cumsum_Tirschenreuth.pdf",
+       # width = 5,height=5)
 
 
 
@@ -261,8 +214,8 @@ show_total_effect(choose_c = "LK Tirschenreuth",
     strip.background = element_blank(),
     strip.text.y = element_blank(),
     axis.title.x=element_blank())
-ggsave("./analysis/tex/plotsnew/info_Tirschen.pdf",
-       width = 5,height=5)
+#ggsave("./analysis/tex/plotsnew/info_Tirschen.pdf",
+       # width = 5,height=5)
 
 p.info <- show_total_effect(average_c = TRUE,
                   choose_age = total.age,
@@ -276,26 +229,15 @@ p.info <- show_total_effect(average_c = TRUE,
     strip.text.y = element_blank(),
     axis.title.x=element_blank())
 p.info
-ggsave("./analysis/tex/plotsnew/info_average.pdf",
+#ggsave("./analysis/tex/plotsnew/info_average.pdf",
        width = 5,height=5)
 
 # total all ---------------------------------------------------------------
 ggpubr::ggarrange(ggpubr::ggarrange(p.traced,p.info,labels = c("A","B")),
                   p.weather,labels = c("","C"),
                   ncol=1)
-ggsave("./analysis/tex/plotsnew/total_all.pdf",
+#ggsave("./analysis/tex/plotsnew/total_all.pdf",
        width = 4,height=4)
-
-
-
-# + wo seasonal extrapolation ---------------------------------------------
-ggpubr::ggarrange(p.traced,p.info,p.weather2,
-                  labels = c("A","B","C"),
-                  nrow=1)
-ggsave("./analysis/tex/plotsnew/total_allR.pdf",
-       width = 6,height=2)
-
-
 # totoal diff info -----------------------------------------------------------
 
 
@@ -472,7 +414,7 @@ p3 <- ggplot(df.serial.interval,
 
 
 ggpubr::ggarrange(p1,p2,p3,ncol = 1)
-ggsave("./analysis/tex/plotsnew/dist.pdf",
+#ggsave("./analysis/tex/plotsnew/dist.pdf",
        width = 4,height=4)
 
 
@@ -745,25 +687,6 @@ stargazer::stargazer(lm,lm2,lm3,
 
 
 
-
-# ++ distributions --------------------------------------------------------
-
-ggplot(
-  rbind(
-    data.frame(name = "basic rep. number", value = df.R0_name$Mean),
-    data.frame(name = "first case timing", value = df.R0_name %>% left_join(data.frame(first = dat$Ti, name = names(dat$Ti))) |> pull(first)),
-    data.frame(name = "number of infections", value = df.tau$Mean)
-    #|>      mutate(name=factor(name,levels = c("R_0","timing first case","number of infections")))
-    ),
-  aes(x=value))+
-  geom_histogram()+
-  facet_wrap(vars(name),scales = "free")+
-  theme(axis.title.x = element_blank())
-ggsave("./analysis/tex/plotsnew/R0meta.pdf",width = 6,height = 2.5)
-
-
-
-
 # week days ---------------------------------------------------------------
 extract_effects(c("FEMon","FETue","FEWed","FEThu","FEFri","FESat","FESun"))%>%
   group_by(age,m)%>%
@@ -788,7 +711,7 @@ effects %>%
   illustrate_corr()+
   scale_y_discrete(label = my_labeller2)+
   scale_x_discrete(label = my_labeller2)
-ggsave("./analysis/tex/plotsnew/estimates_corr_ave.pdf",
+#ggsave("./analysis/tex/plotsnew/estimates_corr_ave.pdf",
        width = 8,height=8)
 
 effects %>%
@@ -803,7 +726,7 @@ effects %>%
   illustrate_corr()+
   scale_y_discrete(label = my_labeller)+
   scale_x_discrete(label = my_labeller)
-ggsave("./analysis/tex/plotsnew/estimates_corr_all_ave.pdf",
+#ggsave("./analysis/tex/plotsnew/estimates_corr_all_ave.pdf",
        width = 9,height=9)
 
 
@@ -818,7 +741,7 @@ effects %>%
   illustrate_corr()+
   scale_y_discrete(label = my_labeller2)+
   scale_x_discrete(label = my_labeller2)
-ggsave("./analysis/tex/plotsnew/estimates_corr.pdf",
+#ggsave("./analysis/tex/plotsnew/estimates_corr.pdf",
        width = 8,height=8)
 
 
@@ -829,7 +752,7 @@ effects %>%
   illustrate_corr()+
   scale_y_discrete(label = my_labeller)+
   scale_x_discrete(label = my_labeller)
-ggsave("./analysis/tex/plotsnew/estimates_corr_all.pdf",
+#ggsave("./analysis/tex/plotsnew/estimates_corr_all.pdf",
        width = 9,height=9)
 
 
@@ -859,32 +782,6 @@ p+
                  dat.interventions%>%filter(date==x)%>%pull(cov)%>%paste0(collapse = ",")}))+
   theme(axis.text.x = element_text(angle=90))
 
-
-
-
-#  convergence -----------------------------------------------------------
-
-
-mcmcplots::traplot(samps,resMCMC%>%
-  arrange(-Rhat)%>%
-  filter(1:n() < 21)%>%
-  rownames(), style="plain")
-
-ggplot(resMCMC,
-       aes(x=Rhat))+geom_histogram(bins = 100)
-
-
-
-# positive constraints ----------------------------------------------------
-
-df.cur <- show_total_effect(
-  choose_age = total.age,average_c = TRUE,
-  covariates = c(macro$cov,macro$dummies.interventions),
-  return.df =TRUE
-)
-
-summary(df.cur$effect)
-sum(df.cur$effect< 0)
 
 # +++ DATA +++ --------------------------------------------------------------------
 
@@ -953,7 +850,7 @@ ggplot(dfheins%>%pivot_longer(c(pos.r,pos.s),
              aes(x=date,y=yposition,label=intervention))+
   theme(legend.position = "bottom",
         axis.title.x = element_blank())
-ggsave("./analysis/tex/plotsnew/heinsberg.pdf",
+#ggsave("./analysis/tex/plotsnew/heinsberg.pdf",
        width = 6,height=4)
 
 
@@ -989,6 +886,59 @@ ggplot(dfheins%>%pivot_longer(c(pos.r,pos.s),
 
 
 
+
+# table summary -----------------------------------------------------------
+
+cur.dat <- data %>% filter(date>= start.date,
+                date<= end.date1)%>%
+  select(name,date,all_of(cov.main))%>%
+  pivot_longer(cov.main,names_to = "cov")%>%
+  group_by(cov)%>%
+  summarise(
+    label = my_labeller2(unique(cov)),
+    min = min(value),
+    q05 = quantile(value,.05),
+    mean = mean(value),
+    q95 = quantile(value,.95),
+    max = max(value),
+    vart = max(0,compute_variation_in(value,date)),
+    varl = max(0,compute_variation_in(value,name)),
+    type = ifelse(all(value%in%c(0,1)), "binary", "real"),
+    first = min(date[value==1],na.rm = TRUE),first = as.character(first),
+    last = max(date[value==1],na.rm = TRUE),last = as.character(last),
+    "total locations" = length(unique(name[value==1])),
+    "total days" = length(unique(date[value==1]))
+  )
+cur.dat %>%
+  filter(type=="binary")%>%
+  arrange(first)%>%
+  select(label,first,'total days','total locations',vart,varl)%>%
+  xtable::xtable()%>%
+  print(include.rownames=FALSE)
+
+
+cur.dat %>%
+  filter(type=="real")%>%
+  left_join(macro$df.standardize %>% select(cov,sd))%>%
+  mutate(standardized = !is.na(sd))%>%
+  select(-c(sd))%>%
+  select(label,min,q05,mean,q95,max,vart,varl)%>%
+  xtable::xtable()%>%
+  print(include.rownames=FALSE)
+
+
+# table counties -----------------------------------------------------------
+
+data %>% group_by(name) %>%
+  summarise(
+    state = substr(unique(Bundesland),1,3),
+    cases = sum(pos.new),
+    deaths = sum(dead.new),
+    population = unique(pop_c)/1e3,
+    incidence = cases/unique(pop_c)*1e5,
+    scfr = deaths/cases*1000
+  )%>%xtable::xtable(digits = 0)%>%print(include.rownames=FALSE)
+
 # asymptomatic cases -------------------------------------------------------
 
 ### Ratio of asymptomatic cases by age group
@@ -1003,7 +953,7 @@ rki_new %>%
   ggplot(aes(x=age,y=asymptomatic))+
   geom_bar(stat = "identity",position = position_dodge())+theme_classic()#+
   #geom_errorbar(aes(ymin=asymptomatic-se,ymax= asymptomatic+se),position = position_dodge())
-ggsave("./analysis/tex/plotsnew/asymptomatic.pdf",width = 5,height=2)
+#ggsave("./analysis/tex/plotsnew/asymptomatic.pdf",width = 5,height=2)
 
 
 
@@ -1023,7 +973,7 @@ rki_new %>%
   )+
 scale_shape_manual(values=shape.cur,labels = age_labels)
 
-ggsave("./analysis/tex/plotsnew/asymptomatic_on_time.pdf",width = 5,height=2)
+#ggsave("./analysis/tex/plotsnew/asymptomatic_on_time.pdf",width = 5,height=2)
 
 
 # 7-day incidence by age group. -------------------------------------------
@@ -1051,24 +1001,7 @@ rki_new %>%
   scale_y_log10()+ylab("incidence")+
   geom_point(size=.1)+
   geom_line()+theme_classic()
-ggsave("./analysis/tex/plotsnew/incidence_by_age.pdf",width = 5,height=2)
-
-
-
-# +incidence age ----------------------------------------------------------
-
-rki_new %>%
-  filter(!is.na(Refdatum),
-         Refdatum>start.date,
-         Refdatum<end.date1) |>
-  group_by(age) |>
-  summarise(pos.new = sum(AnzahlFall[Neuer.Fall%in%c(0,1)]),
-            dead.new = sum(AnzahlTodesfall[Neuer.Todesfall%in%c(0,1)])) |>
-  ungroup() |>
-  mutate(percentage = round(pos.new/sum(pos.new),digits = 3)*100)%>%
-  left_join(regionaldatenbank %>% filter(adm.level==1))%>%
-  mutate(incidence = pos.new/total) |>
-  select(age,pos.new,percentage,incidence,dead.new)
+#ggsave("./analysis/tex/plotsnew/incidence_by_age.pdf",width = 5,height=2)
 
 
 # growth rate daily --------------------------------------------------------------
@@ -1146,7 +1079,7 @@ ggplot(df_all%>%
   ylab("growth rate")+
   scale_x_date(date_breaks = "1 week",
                date_labels = "%d %b")
-ggsave("./analysis/tex/plotsnew/growth_days.pdf",
+#ggsave("./analysis/tex/plotsnew/growth_days.pdf",
        width = 5,height=6)
 
 
@@ -1175,17 +1108,15 @@ plot.dat <- rki_new %>%
          sdi = sd(incidence))
 
   ggplot(plot.dat)+
-  # geom_hline(aes(yintercept = meani))+
-    geom_line(data = plot.dat |> group_by(date) |> summarise(incidence=mean(incidence)),
-              aes(x=date,y=incidence),col="grey",alpha=.5,size=1.2)+
-    geom_line(aes(x=date,
+  geom_hline(aes(yintercept = meani))+
+  geom_line(aes(x=date,
                 y=incidence))+
     #scale_y_log10()+
     theme_bw()+
     guides(color=F)+
   ylab("7-day incidence in 100.000")+
     facet_wrap(age~.)
-ggsave("./analysis/tex/plotsnew/incidence_by_ageR.pdf",
+#ggsave("./analysis/tex/plotsnew/incidence_by_age2.pdf",
        width = 5,height=4)
 
 
@@ -1259,8 +1190,8 @@ p1 <- ggplot(plot.dat%>%
   facet_wrap(name~.)+
   labs(fill = "standardized incidence", x = element_blank(),y = element_blank())
 p1
-ggsave("./analysis/tex/plotsnew/incidence_age_heatmap.pdf",width = 8,height=3)
-#ggsave("./analysis/tex/plotsnew/incidence_age_heatmap.jpeg",width = 8,height=3)
+#ggsave("./analysis/tex/plotsnew/incidence_age_heatmap.pdf",width = 8,height=3)
+##ggsave("./analysis/tex/plotsnew/incidence_age_heatmap.jpeg",width = 8,height=3)
 
 
 
@@ -1332,12 +1263,12 @@ p2 <- ggplot(plot.dat%>%
   scale_x_date(date_labels = "%b %d")+
   labs(fill = "standardized incidence", x = element_blank(),y = element_blank())
 p2
-ggsave("./analysis/tex/plotsnew/incidence_age_heatmap_late.pdf",width = 9,height=3)
+#ggsave("./analysis/tex/plotsnew/incidence_age_heatmap_late.pdf",width = 9,height=3)
 
 #join both plots
 ggpubr::ggarrange(p1,p2,ncol = 1)
-ggsave("./analysis/tex/plotsnew/incidence_age_heatmaps.pdf",width = 9,height=6)
-#ggsave("./analysis/tex/plotsnew/incidence_age_heatmaps.jpg",width = 9,height=6)
+#ggsave("./analysis/tex/plotsnew/incidence_age_heatmaps.pdf",width = 9,height=6)
+##ggsave("./analysis/tex/plotsnew/incidence_age_heatmaps.jpg",width = 9,height=6)
 
 
 # info and delay -----------------------------------------------------------------
@@ -1362,7 +1293,7 @@ data %>%
   geom_line(aes(group=Bundesland))+
   facet_wrap(covariate~Bundesland,scales = "free_y",ncol = 2)+
   theme_classic()
-ggsave("./analysis/tex/plotsnew/info_example.pdf",width = 5,height=3)
+#ggsave("./analysis/tex/plotsnew/info_example.pdf",width = 5,height=3)
 
 # delay general -----------------------------------------------------------
 
@@ -1416,7 +1347,7 @@ rki_new %>%
   geom_hline(yintercept = c(-1,6))+
   theme(axis.title.x = element_blank())+
   scale_x_date(date_labels = "%b %d")
-ggsave("./analysis/tex/plotsnew/delay_on_time.pdf",
+#ggsave("./analysis/tex/plotsnew/delay_on_time.pdf",
        width = 5,height=2)
 
 
@@ -1435,7 +1366,7 @@ data %>%
   theme_bw()+
   theme(axis.title.x = element_blank())+
   ylab("ratio of traced infectiuous")
-ggsave("./analysis/tex/plotsnew/traced_on_time.pdf",
+#ggsave("./analysis/tex/plotsnew/traced_on_time.pdf",
        width = 5,height=2)
 
 Covid::traced%>%
@@ -1455,7 +1386,7 @@ Covid::traced%>%
   theme_bw()+
   theme(axis.title.x = element_blank())+
   ylab("ratio of traced infectious")
-ggsave("./analysis/tex/plotsnew/traced_on_time2.pdf",
+#ggsave("./analysis/tex/plotsnew/traced_on_time2.pdf",
        width = 5,height=2)
 
 
@@ -1489,7 +1420,7 @@ Covid::tests %>% select(date,new.tests) %>%
   theme_classic()+
   ylab("Tests for one symptomatic case")+
   theme(axis.title.x = element_blank())
-ggsave("./analysis/tex/plotsnew/testsprocase.pdf",
+#ggsave("./analysis/tex/plotsnew/testsprocase.pdf",
        width = 5,height=4)
 
 
@@ -1498,7 +1429,7 @@ ggplot(tests,aes(x=date,y=new.tests/1000))+
   geom_point()+
   geom_line()+
   ylim(c(0,1e3))+theme_classic()+ylab("weekly tests (in thousand)")
-ggsave("./analysis/tex/plotsnew/tests.pdf",
+#ggsave("./analysis/tex/plotsnew/tests.pdf",
        width = 5,height=4)
 
 
@@ -1569,7 +1500,7 @@ onset_t %>%
                breaks='1 months')+
   geom_hline(aes(yintercept = eftr),linetype=2)+
   geom_text(aes(label=paste0("n = ",sum.dead),y=.5*eftr),size=3)
-ggsave("./analysis/tex/plotsnew/scfr_time.pdf",width = 5,height=3)
+#ggsave("./analysis/tex/plotsnew/scfr_time.pdf",width = 5,height=3)
 
 
 ### case fatility rate over time
@@ -1613,7 +1544,7 @@ report_t %>%
                limits = as.Date(c("2020-02-22","2020-05-8")),
                   breaks='1 months')+
   geom_text(aes(label=paste0("n = ",sum.dead),y=.5*eftr),size=3)
-ggsave("./analysis/tex/plotsnew/cfr_main.pdf",width = 5,height=2.5)
+#ggsave("./analysis/tex/plotsnew/cfr_main.pdf",width = 5,height=2.5)
 
 
 report_t %>%
@@ -1640,7 +1571,7 @@ report_t %>%
   geom_hline(yintercept = 0)+ylab("cfr")+
   theme_classic()+
   geom_hline(aes(yintercept = eftr),linetype=2)
-ggsave("./analysis/tex/plotsnew/cfr_time.pdf",width = 5,height=3)
+#ggsave("./analysis/tex/plotsnew/cfr_time.pdf",width = 5,height=3)
 
 
 
@@ -1669,53 +1600,18 @@ data %>%
   theme_classic()+
   theme(axis.title.y=element_blank(),
         axis.title.x=element_blank())
-ggsave("./analysis/tex/plotsnew/weather_example.pdf",
+#ggsave("./analysis/tex/plotsnew/weather_example.pdf",
        width = 5,height=4)
 
 
 # interventions -----------------------------------------------------------
 load(res.path)
 
-### joint days
-# safe interventions
-dfs <- data%>%
-  group_by(name,date)%>%slice(1)%>%
-  select(macro$dummies.interventions)%>%
-  filter(date > start.date,
-         date<end.date1)
-res <- data.frame()
-for(i in 1:(length(macro$dummies.interventions)-1)){
-  for(j in (i+1):length(macro$dummies.interventions)){
-    ii <- macro$dummies.interventions[i]
-    jj <- macro$dummies.interventions[j]
-    res <- rbind(res,
-                 data.frame(v1=ii,v2=jj,days = sum(dfs[,ii]!=dfs[,jj])))
-  }
-}
-res <- tibble(res)
-res |> arrange(days)
-illustrate_matrix(res |> select(days,v2,v1))
-
-
-# worst case for each intervention
-non.overlap <- rbind(
-  res,
-  res |> mutate(v2safe=v2,
-                v2=v1,
-                v1 =v2safe) |>
-    select(-c(v2safe))) |>
-  group_by(v1) |>
-  summarise(days=min(days))
-
-
-
-
-
 data %>%
   mutate(time=t)%>%
   select(setdiff(c(macro$dummies,"time"),c(macro$dummies.FE,"sports open"))) %>%
   illustrate_corr()
-ggsave("./analysis/tex/plotsnew/interventions_cor.pdf",
+#ggsave("./analysis/tex/plotsnew/interventions_cor.pdf",
        width = 10,height=10)
 
 library(ggplot2)
@@ -1735,7 +1631,7 @@ ggplot(data%>%
         legend.title=element_blank())+
   scale_y_discrete(label = my_labeller)+
   scale_color_discrete(labels=c("inactive","active"))
-ggsave("./analysis/tex/plotsnew/interventions_by_unit.jpeg",
+#ggsave("./analysis/tex/plotsnew/interventions_by_unit.jpeg",
        width = 10,height=10)
 
 
@@ -1755,7 +1651,7 @@ ggplot(data%>%
         legend.position = "bottom",
         legend.title=element_blank())+
   scale_color_discrete(labels=c("inactive","active"))
-ggsave("./analysis/tex/plotsnew/interventions_by_name.jpeg",
+#ggsave("./analysis/tex/plotsnew/interventions_by_name.jpeg",
        width = 10,height=10)
 
 
@@ -1797,7 +1693,7 @@ ggplot() +
         axis.ticks.y = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank())
-ggsave("./analysis/tex/plotsnew/timeline.pdf",
+#ggsave("./analysis/tex/plotsnew/timeline.pdf",
        width = 7,height=3)
 
 
@@ -1814,7 +1710,7 @@ data %>%
   scale_y_discrete(label = my_labeller)+
   scale_x_discrete(label = my_labeller)
 
-ggsave("./analysis/tex/plotsnew/correlation_all.pdf",
+#ggsave("./analysis/tex/plotsnew/correlation_all.pdf",
        width = 10,height=10)
 
 
@@ -1828,65 +1724,8 @@ data %>%
   scale_y_discrete(label = my_labeller2)+
   scale_x_discrete(label = my_labeller2)
 
-ggsave("./analysis/tex/plotsnew/correlation_main.pdf",
+#ggsave("./analysis/tex/plotsnew/correlation_main.pdf",
        width = 8,height=8)
-
-
-
-
-# table summary -----------------------------------------------------------
-
-cur.dat <- data %>% filter(date>= start.date,
-                           date<= end.date1)%>%
-  select(name,date,all_of(cov.main))%>%
-  pivot_longer(cov.main,names_to = "cov")%>%
-  group_by(cov)%>%
-  summarise(
-    label = my_labeller2(unique(cov)),
-    min = min(value),
-    q05 = quantile(value,.05),
-    mean = mean(value),
-    q95 = quantile(value,.95),
-    max = max(value),
-    vart = max(0,compute_variation_in(value,date)),
-    varl = max(0,compute_variation_in(value,name)),
-    type = ifelse(all(value%in%c(0,1)), "binary", "real"),
-    first = min(date[value==1],na.rm = TRUE),first = as.character(first),
-    last = max(date[value==1],na.rm = TRUE),last = as.character(last),
-    "total locations" = length(unique(name[value==1])),
-    "total days" = length(unique(date[value==1]))
-  )
-
-cur.dat %>%
-  filter(type=="binary")%>%
-  arrange(first)%>%
-  left_join(non.overlap |> mutate(label = my_labeller2(v1))) |>
-  select(label,first,'total days','total locations',vart,varl,days)%>%
-  xtable::xtable()%>%
-  print(include.rownames=FALSE)
-
-
-cur.dat %>%
-  filter(type=="real")%>%
-  left_join(macro$df.standardize %>% select(cov,sd))%>%
-  mutate(standardized = !is.na(sd))%>%
-  select(-c(sd))%>%
-  select(label,min,q05,mean,q95,max,vart,varl)%>%
-  xtable::xtable()%>%
-  print(include.rownames=FALSE)
-
-
-# table counties -----------------------------------------------------------
-
-data %>% group_by(name) %>%
-  summarise(
-    state = substr(unique(Bundesland),1,3),
-    cases = sum(pos.new),
-    deaths = sum(dead.new),
-    population = unique(pop_c)/1e3,
-    incidence = cases/unique(pop_c)*1e5,
-    scfr = deaths/cases*1000
-  )%>%xtable::xtable(digits = 0)%>%print(include.rownames=FALSE)
 
 
 # growth rate emprirics ---------------------------------------------------
@@ -1960,7 +1799,7 @@ ggplot(res%>%
   theme_bw()+
   theme(axis.title.x = element_blank())+
   ylab(latex2exp::TeX("dispersion $\\Psi$"))
-ggsave("./analysis/tex/plotsnew/disp_reduced.pdf",
+#ggsave("./analysis/tex/plotsnew/disp_reduced.pdf",
        width = 6,height=3)
 
 
@@ -1990,7 +1829,7 @@ ggplot(df_all%>%
   theme_bw()+
   ylab("Variance of growth rate")+
   xlab("infections in previous week")
-ggsave("./analysis/tex/plotsnew/grate_ilag.pdf",
+#ggsave("./analysis/tex/plotsnew/grate_ilag.pdf",
        width = 6,height=3)
 
 
@@ -2012,18 +1851,3 @@ quantile(plot_gamma_dist(5.1,2), probs = c(.025,.975))
 # 5.0 days and standard deviation of 1.9 days
 
 
-# Table with all covariate names ------------------------------------------
-
-covariate.labels<- data.frame(var = macro$dummies.interventions) |>
-  left_join(
-    as.data.frame(InfSup:::labels.draft) |> rownames_to_column(var = "var") |> rename(variable = "InfSup:::labels.draft")) |>
-  left_join(
-    as.data.frame(InfSup:::labels.draft2) |> rownames_to_column("var") |> rename(label = "InfSup:::labels.draft2")
-    ) |>
-  # mutate(variable = ifelse(is.na(variable),var,variable)) |>
-  left_join(data.frame(var=cov.main, important=TRUE)) |>
-  left_join(data.frame(var = names(InfSup:::labels.draft.all),finallabel = InfSup:::labels.draft.all) )
-
-covariate.labels
-
-covariate.labels |> filter(is.na(important))

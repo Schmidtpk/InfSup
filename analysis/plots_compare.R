@@ -2,6 +2,7 @@ library(Covid)
 library(RCovModel)
 library(tidyverse)
 library(latex2exp)
+library(tidybayes)
 
 vec.path <- c(
   "./jags models/submission/save/submission.RData",
@@ -76,11 +77,6 @@ for(path.cur in vec.path){
 
 # effects plot ------------------------------------------------------------
 
-library(Covid)
-library(RCovModel)
-library(tidybayes)
-library(latex2exp)
-library(tidyverse)
 
 
 
@@ -117,24 +113,36 @@ res <- all%>%
 
 limitsx <- c(-0.8,.5)
 
+# sample from prior
+res.plot <- res
+load("./jags models/submission/save/submission.RData")
+sample.prior <- rnorm(1e5,0,sqrt(1/dat$na)*dat$effect_sd)
+sample.prior <- sample.prior[sample.prior>-1]
+prior.down <- quantile(sample.prior,probs = 0.025)
+prior.up <- quantile(sample.prior,probs = 0.975)
+dat.prior <- data.frame(prior.up=prior.up,prior.down=prior.down)
+
 pd <- position_dodge(width = .7)
-ggplot(res%>%filter(run %in% c("main","low reporting rate","high reporting rate")),
-       mapping = aes(y=m,x=mean,xmax=.upper,xmin=.lower,shape=run))+
+ggplot(res.plot%>%filter(run %in% c("main","low reporting rate","high reporting rate")))+
+  geom_rect(data= res.plot |> slice(1) |> cbind(dat.prior),
+            aes(xmin=prior.down, xmax=prior.up, ymin=-Inf, ymax=Inf),
+            alpha=.1)+
   geom_vline(xintercept = 0, linetype = 2)+
-  geom_errorbar(position = pd,
-                alpha=1)+
-  geom_point(position = pd)+
+  geom_errorbar(aes(y=m,x=mean,xmax=.upper,xmin=.lower,shape=run),
+                position = pd)+
+  geom_point(aes(y=m,x=mean,shape=run),
+             position = pd)+
   scale_y_discrete(label = my_labeller2)+
   scale_shape_manual('model',values = c("main" = 4,"low reporting rate"=1,"high reporting rate"=2))+
   theme(
     axis.title.y = element_blank()
   )+
   coord_cartesian(xlim=limitsx)
-ggsave("./analysis/tex/plotsnew/res_robust.pdf",
+ggsave("./analysis/tex/plotsnew/res_robustR2.pdf",
        width = 6,height=8)
 
 
-ggplot(res%>%filter(run %in% c("main",
+ggplot(res.plot%>%filter(run %in% c("main",
                                "no age",
                                "only interventions")),
        mapping = aes(y=m,x=mean,xmax=.upper,xmin=.lower,shape=run))+
@@ -142,6 +150,9 @@ ggplot(res%>%filter(run %in% c("main",
   geom_errorbar(position = pd,
                 alpha=1)+
   geom_point(position = pd)+
+  geom_rect(data= res.plot |> slice(1) |> cbind(dat.prior),
+            aes(xmin=prior.down, xmax=prior.up, ymin=-Inf, ymax=Inf),
+            alpha=.1)+
   scale_y_discrete(label = my_labeller2)+
   scale_shape_manual("model",values = c("main" = 4,
                                 "no age" = 6,"only interventions"=7))+
@@ -149,11 +160,11 @@ ggplot(res%>%filter(run %in% c("main",
     axis.title.y = element_blank()
   )+
   coord_cartesian(xlim=limitsx)
-ggsave("./analysis/tex/plotsnew/res_alternative_effects.pdf",
+ggsave("./analysis/tex/plotsnew/res_alternative_effectsR2.pdf",
        width = 6,height=8)
 
 
-ggplot(res%>%filter(run %in% c("main",
+ggplot(res.plot%>%filter(run %in% c("main",
                                "reporting date",
                                "death based",
                                "semi-mechanistic"
@@ -163,11 +174,14 @@ ggplot(res%>%filter(run %in% c("main",
   geom_errorbar(position = pd,
                 alpha=1)+
   geom_point(position = pd)+
+  geom_rect(data= res.plot |> slice(1) |> cbind(dat.prior),
+            aes(xmin=prior.down, xmax=prior.up, ymin=-Inf, ymax=Inf),
+            alpha=.1)+
   scale_y_discrete(label = my_labeller2)+
   scale_shape_manual("model",values = c("main" = 4,"death based" = 1,"reporting date"=2,"semi-mechanistic"=5))+
   theme(
     axis.title.y = element_blank()
   )+
   coord_cartesian(xlim=limitsx)
-ggsave("./analysis/tex/plotsnew/res_alternative_process.pdf",
+ggsave("./analysis/tex/plotsnew/res_alternative_processR2.pdf",
        width = 6,height=8)

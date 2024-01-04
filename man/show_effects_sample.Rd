@@ -26,9 +26,6 @@ show_effects_sample(
 
 \item{dim_names}{dimension names of effects (standard is age and m, which is the number of covariates)}
 }
-\value{
-
-}
 \description{
 New version of plot_effects
 }
